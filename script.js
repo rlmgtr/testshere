@@ -1,130 +1,81 @@
-const apiKey = 'f1a7f601f87c9d97579ef8237cc83ff1';
-const city = 'balanga';
-const currentWeatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`;
-const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}`;
-
-let isCelsius = true;
-
-document.addEventListener('DOMContentLoaded', () => {
-    fetchCurrentWeather();
-    fetchForecast();
-    setBackground();
-    document.getElementById('toggle-temp').addEventListener('click', toggleTemperature);
+document.getElementById('searchForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const city = document.getElementById('cityInput').value;
+    fetchWeather(city);
 });
 
-function fetchCurrentWeather() {
-    axios.get(currentWeatherUrl).then(response => {
-        const data = response.data;
-        const location = data.name;
-        const date = new Date().toLocaleDateString();
-        const temp = isCelsius ? (data.main.temp - 273.15).toFixed(1) : ((data.main.temp - 273.15) * 9/5 + 32).toFixed(1);
-        const weatherImg = `http://openweathermap.org/img/w/${data.weather[0].icon}.png`;
+function fetchWeather(city) {
+    const apiKey = 'f1a7f601f87c9d97579ef8237cc83ff1';
+    const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
 
-        document.getElementById('location').innerText = location;
-        document.getElementById('date').innerText = date;
-        document.getElementById('current-temp').innerText = `Current Temperature: ${temp}°${isCelsius ? 'C' : 'F'}`;
-        document.getElementById('current-weather-img').innerHTML = `<img src="${weatherImg}" alt="Weather icon">`;
-    });
-}
-
-function fetchForecast() {
-    axios.get(forecastUrl).then(response => {
-        const data = response.data;
-        const forecastContainer = document.getElementById('daily-forecast');
-        forecastContainer.innerHTML = '';
-
-        for (let i = 0; i < data.list.length; i += 8) {
-            const forecast = data.list[i];
-            const date = new Date(forecast.dt * 1000).toLocaleDateString();
-            const minTemp = isCelsius ? (forecast.main.temp_min - 273.15).toFixed(1) : ((forecast.main.temp_min - 273.15) * 9/5 + 32).toFixed(1);
-            const maxTemp = isCelsius ? (forecast.main.temp_max - 273.15).toFixed(1) : ((forecast.main.temp_max - 273.15) * 9/5 + 32).toFixed(1);
-            const weatherImg = `http://openweathermap.org/img/w/${forecast.weather[0].icon}.png`;
-
-            const forecastElement = document.createElement('div');
-            forecastElement.innerHTML = `
-                <div>${date}</div>
-                <div><img src="${weatherImg}" alt="Weather icon"></div>
-                <div>Min: ${minTemp}°${isCelsius ? 'C' : 'F'}</div>
-                <div>Max: ${maxTemp}°${isCelsius ? 'C' : 'F'}</div>
-                <button onclick="showMoreInfo(${i})">More Info</button>
-            `;
-            forecastContainer.appendChild(forecastElement);
-        }
-    });
-}
-
-function showMoreInfo(index) {
-    axios.get(forecastUrl).then(response => {
-        const data = response.data;
-        const hourlyForecast = data.list.slice(index, index + 8);
-        const hourlyContainer = document.getElementById('hourly-forecast');
-        hourlyContainer.innerHTML = '';
-
-        const times = [];
-        const temps = [];
-
-        hourlyForecast.forEach(forecast => {
-            const time = new Date(forecast.dt * 1000).toLocaleTimeString();
-            const temp = isCelsius ? (forecast.main.temp - 273.15).toFixed(1) : ((forecast.main.temp - 273.15) * 9/5 + 32).toFixed(1);
-            const weatherImg = `http://openweathermap.org/img/w/${forecast.weather[0].icon}.png`;
-            const rain = forecast.rain ? forecast.rain['3h'] : 0;
-            const wind = forecast.wind.speed;
-
-            times.push(time);
-            temps.push(temp);
-
-            const forecastElement = document.createElement('div');
-            forecastElement.innerHTML = `
-                <div>${time}</div>
-                <div><img src="${weatherImg}" alt="Weather icon"></div>
-                <div>Temp: ${temp}°${isCelsius ? 'C' : 'F'}</div>
-                <div>Rain: ${rain} mm</div>
-                <div>Wind: ${wind} m/s</div>
-            `;
-            hourlyContainer.appendChild(forecastElement);
-        });
-
-        renderChart(times, temps);
-        document.getElementById('more-info').style.display = 'block';
-    });
-}
-
-function renderChart(labels, data) {
-    const ctx = document.getElementById('hourly-chart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: `Temperature (°${isCelsius ? 'C' : 'F'})`,
-                data: data,
-                borderColor: 'rgba(75, 192, 192, 1)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: false
-                }
+    fetch(apiUrl)
+    .then(response => response.json())
+    .then(data => {
+        const forecast = data.list.reduce((acc, item) => {
+            const date = item.dt_txt.split(' ')[0];
+            if (!acc[date]) {
+                acc[date] = [];
             }
-        }
+            acc[date].push(item);
+            return acc;
+        }, {});
+
+        displayForecast(forecast);
+    })
+    .catch(error => {
+        console.error('Error fetching data:', error);
     });
 }
 
-function toggleTemperature() {
-    isCelsius = !isCelsius;
-    fetchCurrentWeather();
-    fetchForecast();
+function displayForecast(forecast) {
+    const forecastContainer = document.getElementById('forecast');
+    forecastContainer.innerHTML = '';
+
+    for (const date in forecast) {
+        const dayForecast = forecast[date];
+        const minTemp = Math.min(...dayForecast.map(item => item.main.temp_min));
+        const maxTemp = Math.max(...dayForecast.map(item => item.main.temp_max));
+        const dayElement = document.createElement('div');
+        dayElement.classList.add('day');
+        const iconUrl = `https://openweathermap.org/img/w/${dayForecast[0].weather[0].icon}.png`;
+        dayElement.innerHTML = `
+            <div>${new Date(dayForecast[0].dt * 1000).toDateString()}</div>
+            <img src="${iconUrl}" alt="${dayForecast[0].weather[0].description}">
+            <div>Min Temp: ${minTemp}°C</div>
+            <div>Max Temp: ${maxTemp}°C</div>
+        `;
+        dayElement.addEventListener('click', function() {
+            displayWeatherInfo(dayForecast);
+        });
+        forecastContainer.appendChild(dayElement);
+    }
 }
 
-function setBackground() {
-    const key = 'YOUR_PIXABAY_API_KEY';
-    const url = `https://pixabay.com/api/?key=${key}&q=nature&image_type=photo`;
-    axios.get(url).then(response => {
-        const images = response.data.hits;
-        const randomImage = images[Math.floor(Math.random() * images.length)].largeImageURL;
-        document.body.style.backgroundImage = `url(${randomImage})`;
+function displayWeatherInfo(weatherData) {
+    const weatherInfoContainer = document.getElementById('weatherInfo');
+    weatherInfoContainer.innerHTML = '';
+
+    weatherData.forEach(item => {
+        const weatherElement = document.createElement('div');
+        const time = new Date(item.dt * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const temperature = item.main.temp;
+        const description = item.weather[0].description;
+        const clouds = item.clouds.all;
+        const windSpeed = item.wind.speed;
+        const visibility = item.visibility / 1000; // Convert visibility to kilometers
+        const iconUrl = `https://openweathermap.org/img/w/${item.weather[0].icon}.png`;
+
+        weatherElement.innerHTML = `
+            <div>${time}</div>
+            <img src="${iconUrl}" alt="${description}">
+            <div>Temperature: ${temperature}°C</div>
+            <div>Description: ${description}</div>
+            <div>Clouds: ${clouds}% <img src="cloud-icon.png" alt="Clouds"></div>
+            <div>Wind Speed: ${windSpeed} m/s <img src="wind-icon.png" alt="Wind"></div>
+            <div>Visibility: ${visibility} km <img src="visibility-icon.png" alt="Visibility"></div>
+        `;
+        weatherInfoContainer.appendChild(weatherElement);
     });
+
+    weatherInfoContainer.classList.remove('hide');
 }
