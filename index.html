@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div id="current-weather">
+            <h1 id="location"></h1>
+            <h2 id="date"></h2>
+            <div id="current-temp"></div>
+            <div id="current-weather-img"></div>
+        </div>
+        <div id="forecast">
+            <h2>5-Day Forecast</h2>
+            <div id="daily-forecast"></div>
+        </div>
+        <div id="more-info" style="display: none;">
+            <h2>3-Hour Forecast</h2>
+            <div id="hourly-forecast"></div>
+            <canvas id="hourly-chart"></canvas>
+        </div>
+        <button id="toggle-temp">Toggle °C/°F</button>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
