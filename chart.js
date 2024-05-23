@@ -35,6 +35,7 @@ function fetchWeather(city) {
         }, {});
 
         displayForecast(forecast);
+        prepareChartData(forecast);
     })
     .catch(error => {
         console.error('Error fetching data:', error);
@@ -98,4 +99,85 @@ function displayWeatherInfo(weatherData) {
     weatherInfoContainer.classList.remove('hide');
 }
 
+function prepareChartData(forecast) {
+    const labels = Object.keys(forecast);
+    const temperatures = [];
+    const humidities = [];
+    const windSpeeds = [];
+    const pressures = [];
 
+    for (const date in forecast) {
+        const dayForecast = forecast[date];
+        const avgTemp = dayForecast.reduce((sum, item) => sum + item.main.temp, 0) / dayForecast.length;
+        const avgHumidity = dayForecast.reduce((sum, item) => sum + item.main.humidity, 0) / dayForecast.length;
+        const avgWindSpeed = dayForecast.reduce((sum, item) => sum + item.wind.speed, 0) / dayForecast.length;
+        const avgPressure = dayForecast.reduce((sum, item) => sum + item.main.pressure, 0) / dayForecast.length;
+        
+        temperatures.push(avgTemp);
+        humidities.push(avgHumidity);
+        windSpeeds.push(avgWindSpeed);
+        pressures.push(avgPressure);
+    }
+
+    displayChart(labels, temperatures, humidities, windSpeeds, pressures);
+}
+
+function displayChart(labels, temperatures, humidities, windSpeeds, pressures) {
+    const ctx = document.getElementById('weatherChart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Temperature (°C)',
+                    data: temperatures,
+                    borderColor: 'orange',
+                    fill: false
+                },
+                {
+                    label: 'Humidity (%)',
+                    data: humidities,
+                    borderColor: 'blue',
+                    fill: false
+                },
+                {
+                    label: 'Wind Speed (m/s)',
+                    data: windSpeeds,
+                    borderColor: 'black',
+                    fill: false
+                },
+                {
+                    label: 'Pressure (hPa)',
+                    data: pressures,
+                    borderColor: 'green',
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Value'
+                    }
+                }
+            }
+        }
+    });
+}
+
+document.getElementById('showGraphBtn').addEventListener('click', function() {
+    const chartElement = document.getElementById('weatherChart');
+    chartElement.style.display = 'block';
+});

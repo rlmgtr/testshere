@@ -14,14 +14,31 @@
         <input type="submit" value="Search">
     </form>
 
+    <div>
+        <label>
+            <input type="radio" name="unit" value="metric" checked> °C
+        </label>
+        <label>
+            <input type="radio" name="unit" value="imperial"> °F
+        </label>
+    </div>
+
     <div id="forecast" class="forecast"></div>
     <div id="weatherInfo" class="weather-info"></div>
 </div>
 
+<div id="currentforecast" class="currentforecast">current weather</div>
+<div id="currentdate" class="currentdate">current date</div>
+
+
+<button id="showGraphBtn">Show Graph</button>
+<canvas id="weatherChart" width="400" height="200" style="display:none;"></canvas>
 
 
 
 <script src="script.js"></script>
-
+<script src="currentW.js"></script>
+<script src="chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>

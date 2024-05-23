@@ -43,3 +43,19 @@ input[type="submit"] {
 .hide {
     display: none;
 }
+
+
+
+/* */
+
+
+
+
+.currentforecast img {
+    width: 100px;
+    height: 100px;
+}
+
+.currentforecast p {
+    margin: 5px 0;
+}
