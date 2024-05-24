@@ -1,3 +1,9 @@
+const DEFAULT_CITY = 'Balanga';
+
+document.addEventListener('DOMContentLoaded', function() {
+    fetchWeather(DEFAULT_CITY);
+});
+
 document.getElementById('searchForm').addEventListener('submit', function(event) {
     event.preventDefault();
     const city = document.getElementById('cityInput').value;
@@ -97,5 +103,3 @@ function displayWeatherInfo(weatherData) {
 
     weatherInfoContainer.classList.remove('hide');
 }
-
-
